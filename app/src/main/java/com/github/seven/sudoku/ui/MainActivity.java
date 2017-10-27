@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity implements AdapterListener.O
         mAdapter.setData(new int[4 * 4]);
         mAdapter.setOnItemClickListener(this);
         mChessBoardView.setAdapter(mAdapter);
+
+        test();
     }
 
     @Override
@@ -42,11 +44,12 @@ public class MainActivity extends AppCompatActivity implements AdapterListener.O
 
     private void test(){
 
-        Sudoku sudoku = new Sudoku(4);
-        sudoku.fillChessBoardRow(1,0,0,1,0);
-        sudoku.fillChessBoardRow(2,0,3,0,4);
-        sudoku.fillChessBoardRow(3,3,0,4,0);
-        sudoku.fillChessBoardRow(4,0,2,0,0);
+        Sudoku sudoku = new Sudoku(5);
+        sudoku.fillChessBoardRow(1,0,1,0,0,0);
+        sudoku.fillChessBoardRow(2,3,0,0,0,0);
+        sudoku.fillChessBoardRow(3,0,4,5,2,3);
+        sudoku.fillChessBoardRow(4,0,0,4,0,0);
+        sudoku.fillChessBoardRow(5,0,0,0,0,1);
         boolean success = sudoku.calculate();
         MyLogger.log().d("sudoku.calculate() ---> " + success);
     }
