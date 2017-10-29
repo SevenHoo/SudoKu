@@ -127,6 +127,15 @@ public class Sudoku {
         return (row - 1) * mRow + (column - 1);
     }
 
+    private int getRow(int index){
+        return index / mRow + 1;
+
+    }
+
+    private int getColumn(int index){
+        return index % mRow + 1;
+    }
+
     /**
      * 填写完初始数据后，需要刷新一下棋盘状态
      * @return 负数表示棋盘数据有误，正整数表示还有多少未知格，0代表成功
@@ -143,10 +152,8 @@ public class Sudoku {
             for (int j = 1; j <= mRow; j ++){
 
                 value = calculateChessGirdValue(chessBoard,i,j);
-                Log.d(TAG,"calculateChessGird row = " + i + " column = " + j + " value = " + value);
-                fillChessGrid(chessBoard,i,j,value);
-
-                if(0 == value){
+                Log.d(TAG,"refreshChessBoard: row = " + i + " column = " + j + " value = " + value);
+                if(!fillChessGrid(chessBoard,i,j,value)){
                     return -1;
                 }
             }
@@ -158,35 +165,47 @@ public class Sudoku {
     /**
      * 填写指定格
      */
-    private void fillChessGrid(int [] chessBoard, int row, int column, int value){
+    private boolean fillChessGrid(int [] chessBoard, final int row, final int column, int value){
+
+        Log.d(TAG,"fillChessGrid row = " + row + " column = " + column
+                + " current =  " + chessBoard[getArrayIndex(row,column)] + " value = " + value);
 
         //已经填写
         if(chessBoard[getArrayIndex(row,column)] == value){
-            return;
+            return true;
         }
+
         chessBoard[getArrayIndex(row,column)] = value;
         printChessBoard(chessBoard);
-        if(value >= 0){
-            return;
+
+        if(value > 0){
+            return true;
         }
 
+        if(value == 0){
+            return false;
+        }
+
+        //填写一个确认数字
+
+        //全部填写完，返回成功
         if(getBlankCount(chessBoard) == 0){
-            return;
+            return true;
         }
 
-        //刷新关联行
+        //填写确定数字，刷新关联行其他格的值并填写
         for (int i = 1; i <= mRow; i ++){
             if (column == i){
                 continue;
             }
             value = calculateValue(chessBoard,row,i,ROW);
-            //Log.d(TAG,"fillChessGrid row = " + row + " column = " + i  +  " value = " + value);
-            fillChessGrid(chessBoard,row,i,value);
+            if(!fillChessGrid(chessBoard,row,i,value)){
+                return false;
+            }
         }
 
-
         if(getBlankCount(chessBoard) == 0){
-            return;
+            return true;
         }
 
         //刷新关联列
@@ -194,10 +213,13 @@ public class Sudoku {
             if (row == i){
                 continue;
             }
-            Log.d(TAG,"fillChessGrid row = " + i + " column = " + column  +  " value = " + value);
             value = calculateValue(chessBoard,i,column,COLUMN);
-            fillChessGrid(chessBoard,i,column,value);
+            if(!fillChessGrid(chessBoard,i,column,value)){
+                return false;
+            }
         }
+
+        return true;
     }
 
     /**
@@ -232,22 +254,25 @@ public class Sudoku {
         int index = getArrayIndex(row,column);
         int value = chessBoard[index];
 
+        if(value < 0){
+            return value;
+        }
+
         for(int i = 1; i <= mRow; i ++){
             //本身跳过
             if(i == (relation == ROW ? column : row)){
                 continue;
             }
             index = (relation == ROW ? getArrayIndex(row,i) : getArrayIndex(i,column));
-            MyLogger.log().d("calculateChessGirdValue!!! value = " + value + " exclude " + chessBoard[index] + " index = " + index);
             value = calculateChessGirdValue(value,chessBoard[index]);
             //说明棋盘数据已经出错
             if(0 == value){
                 return 0;
             }
-            //已填写好数字
-            if(value < 0){
-                return value;
-            }
+//            //必须全部计算
+//            if(value < 0){
+//                return value;
+//            }
         }
         return value;
     }
@@ -259,6 +284,11 @@ public class Sudoku {
     private int calculateChessGirdValue(int mode, int reference){
 
         if(mode <= 0){
+
+            if(mode == reference){
+                return 0;
+            }
+
             return mode;
         }
 
@@ -343,13 +373,12 @@ public class Sudoku {
         return calculate(mChessBoard);
     }
 
-    private boolean flag = false;
     private boolean calculate(int[] chessBoard){
 
-        int currentGridIndex = findMinPossibilityIndex();
-        //Log.d(TAG,"currentGridIndex ---> " + currentGridIndex);
+        int currentGridIndex = findMinPossibilityIndex(chessBoard);
         //存在无解的方格
         if(currentGridIndex < 0){
+            Log.d(TAG,"already tried all possibility.");
             return false;
         }
         //记录操作之前的状态
@@ -357,30 +386,28 @@ public class Sudoku {
         //填写第一个可能的数字
         int number = getPossibilityNumber(chessBoard[currentGridIndex],1);
         Log.d(TAG,"try to fill the no." + currentGridIndex + " grid with " + number);
-        chessBoard[currentGridIndex] = number;
         //校验填写是否正确
-        int result = refreshChessBoard(chessBoard);
-        printChessBoard(chessBoard);
+        boolean success = fillChessGrid(chessBoard,getRow(currentGridIndex),getColumn(currentGridIndex),number);
 
         //填写错误，重新尝试下个可能数字
-        if(result < 0){
+        if(!success){
             Log.d(TAG,"no." + currentGridIndex + " grid is not allowed to fill the  " + number);
             SudoKuRecord record = mSudoKuOperatorStack.pop();
             chessBoard = record.getChessBoard();
             currentGridIndex = record.getCurrentIndex();
             //去除尝试的数字可能性
             chessBoard[currentGridIndex] = exclude(chessBoard[currentGridIndex],number);
+            printChessBoard(chessBoard);
             return calculate(chessBoard);
         }
 
-        if(result > 0){
-            //寻找下一个可能性最小的格子填写
-            return calculate(chessBoard);
+        if(getBlankCount(chessBoard) == 0){
+            mChessBoard = chessBoard;
+            return true;
         }
 
-        //result == 0,不含未知格，成功.
-        mChessBoard = chessBoard;
-        return true;
+        //寻找下一个可能性最小的格子填写
+        return calculate(chessBoard);
     }
 
     private int getBlankCount(int[] chessBoard){
@@ -397,7 +424,7 @@ public class Sudoku {
     /**
      * 查找存在可能性最少的数字
      */
-    private int findMinPossibilityIndex(){
+    private int findMinPossibilityIndex(int[] chessBoard){
 
         int index;
         int value;
@@ -408,7 +435,7 @@ public class Sudoku {
         for (int i = 1; i <= mRow; i ++) {
             for (int j = 1; j <= mRow; j++) {
                 index = getArrayIndex(i,j);
-                value = mChessBoard[index];
+                value = chessBoard[index];
                 if(value == 0){
                     return -1;
                 }
