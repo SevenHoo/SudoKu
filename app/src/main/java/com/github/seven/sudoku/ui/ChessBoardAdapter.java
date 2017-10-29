@@ -1,6 +1,7 @@
 package com.github.seven.sudoku.ui;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.github.seven.sudoku.R;
+import com.github.seven.sudoku.utils.ChessBoardUtils;
+import com.github.seven.sudoku.utils.MyLogger;
 
 /**
  * Description: 展示数独棋盘的RecyclerView的数据适配器 <br/>
@@ -20,16 +23,52 @@ public class ChessBoardAdapter extends RecyclerView.Adapter<ChessBoardAdapter.My
 
     private Context mContext;
     private int[] mData;
+    private int mCheckIndex;
+    private int mRow;
 
     private AdapterListener.OnItemClickListener mOnItemClickListener;
     private AdapterListener.OnItemLongClickListener mOnItemLongClickListener;
 
     public ChessBoardAdapter(Context context) {
         this.mContext = context;
+        this.mCheckIndex = -1;
+    }
+
+    public void setRow(int row){
+        this.mRow = row;
+        this.mData = new int[row * row];
+        this.mCheckIndex = -1;
+    }
+
+    public void setCheckedData(int value){
+        if(mCheckIndex < 0 || mCheckIndex >= mData.length){
+            MyLogger.log().e("mCheckIndex is error, mCheckIndex: " + mCheckIndex);
+            return;
+        }
+        mData[mCheckIndex] = value;
+        notifyDataSetChanged();
+    }
+
+    public int getRow(){
+        return mRow;
     }
 
     public void setData(int[] data){
-        this.mData = data;
+
+        if(data.length != mRow * mRow){
+            return;
+        }
+        mData = data;
+        notifyDataSetChanged();
+    }
+
+    public int[] getData(){
+        return mData;
+    }
+
+    public void check(int index){
+        this.mCheckIndex = index;
+        notifyDataSetChanged();
     }
 
     /**
@@ -52,7 +91,7 @@ public class ChessBoardAdapter extends RecyclerView.Adapter<ChessBoardAdapter.My
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        View item = LayoutInflater.from(mContext).inflate(R.layout.item_layout, parent, false);
+        View item = LayoutInflater.from(mContext).inflate(R.layout.item_layout, null, false);
         return new MyViewHolder(item);
     }
 
@@ -60,7 +99,12 @@ public class ChessBoardAdapter extends RecyclerView.Adapter<ChessBoardAdapter.My
     @Override
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
 
-        holder.chessGridView.setImageResource(getResId(mData[position]));
+        holder.chessGridView.setImageResource(ChessBoardUtils.getResId(mData[position]));
+        if(mCheckIndex == position){
+            holder.chessGridView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.gray));
+        }else {
+            holder.chessGridView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.transparent));
+        }
 
         // 如果设置了回调，则设置点击事件
         if (mOnItemClickListener != null)
@@ -103,14 +147,5 @@ public class ChessBoardAdapter extends RecyclerView.Adapter<ChessBoardAdapter.My
             super(view);
             chessGridView = (ImageView) view.findViewById(R.id.chess_grid_image_view);
         }
-    }
-
-    private static final int[] RES_ID = {R.mipmap.ic_angle, R.mipmap.ic_rect, R.mipmap.ic_circle, R.mipmap.ic_star, R.mipmap.ic_x};
-    private int getResId(int position){
-
-        if(position < 0 || position >= RES_ID.length){
-            return RES_ID[0];
-        }
-        return RES_ID[position];
     }
 }

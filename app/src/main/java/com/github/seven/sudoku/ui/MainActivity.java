@@ -5,9 +5,12 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.Toast;
 
 import com.github.seven.sudoku.R;
+import com.github.seven.sudoku.core.SudoKuRecord;
 import com.github.seven.sudoku.core.Sudoku;
+import com.github.seven.sudoku.utils.ChessBoardUtils;
 import com.github.seven.sudoku.utils.MyLogger;
 
 public class MainActivity extends AppCompatActivity implements AdapterListener.OnItemClickListener{
@@ -15,7 +18,7 @@ public class MainActivity extends AppCompatActivity implements AdapterListener.O
     private RecyclerView mChessBoardView;
     private GridLayoutManager mGridLayoutManager;
     private ChessBoardAdapter mAdapter;
-
+    private Sudoku mSudoKu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,34 +26,117 @@ public class MainActivity extends AppCompatActivity implements AdapterListener.O
         setContentView(R.layout.activity_main);
 
         mChessBoardView = (RecyclerView) findViewById(R.id.chess_board_recycler_view);
-        mGridLayoutManager = new GridLayoutManager(this,4,GridLayoutManager.VERTICAL,false);
-        mChessBoardView.setLayoutManager(mGridLayoutManager);
         mChessBoardView.setOverScrollMode(View.OVER_SCROLL_NEVER); //去除边界的蓝色阴影
-        //mUserRecyclerView.addItemDecoration(new UserItemDecoration());
-        //mUserRecyclerView.addOnScrollListener(mOnScrollListener);
 
-        mAdapter = new ChessBoardAdapter(this);
-        mAdapter.setData(new int[4 * 4]);
-        mAdapter.setOnItemClickListener(this);
-        mChessBoardView.setAdapter(mAdapter);
-
-        test();
+        createOrResetChessBoard(4);
     }
 
     @Override
     public void onItemClick(View view, int position, Object extra) {
-
+        mAdapter.check(position);
     }
 
-    private void test(){
+    private boolean calculate(){
 
-        Sudoku sudoku = new Sudoku(5);
-        sudoku.fillChessBoardRow(1,0,1,0,0,0);
-        sudoku.fillChessBoardRow(2,3,0,0,0,0);
-        sudoku.fillChessBoardRow(3,0,4,5,2,3);
-        sudoku.fillChessBoardRow(4,0,0,4,0,0);
-        sudoku.fillChessBoardRow(5,0,0,0,0,1);
-        boolean success = sudoku.calculate();
-        MyLogger.log().d("sudoku.calculate() ---> " + success);
+        int row = mAdapter.getRow();
+        int [] value = mAdapter.getData();
+
+        mSudoKu = new Sudoku(row);
+        mSudoKu.fillChessBoard(value);
+        return mSudoKu.calculate();
     }
+
+
+    public void switchMode(View view){
+        switch (view.getId()){
+            case R.id.easy_mode_button:
+                createOrResetChessBoard(4);
+                break;
+
+            case R.id.hard_mode_button:
+                createOrResetChessBoard(5);
+                break;
+        }
+    }
+
+    public void fill(View view){
+
+        switch (view.getId()){
+
+            case R.id.angle_button:
+                mAdapter.setCheckedData(ChessBoardUtils.RES_INDEX_ANGLE);
+                break;
+
+            case R.id.rect_button:
+                mAdapter.setCheckedData(ChessBoardUtils.RES_INDEX_RECT);
+                break;
+
+            case R.id.circle_button:
+                mAdapter.setCheckedData(ChessBoardUtils.RES_INDEX_CIRCLE);
+                break;
+
+            case R.id.ten_button:
+                mAdapter.setCheckedData(ChessBoardUtils.RES_INDEX_CROSS);
+                break;
+
+            case R.id.star_button:
+                mAdapter.setCheckedData(ChessBoardUtils.RES_INDEX_STAR);
+                break;
+        }
+    }
+
+    public void control(View view){
+
+        switch (view.getId()){
+
+            case R.id.start_calculate_button:
+
+                if(!calculate()){
+                    Toast.makeText(this,"此题无解",Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                //转换显示出来
+                int chessBoard[] = mSudoKu.getChessBoard();
+                for (int i = 0; i < chessBoard.length; i ++){
+                    chessBoard[i] = - chessBoard[i];
+                }
+
+                mAdapter.setData(chessBoard);
+                break;
+
+            case R.id.clear_data_button:
+                createOrResetChessBoard(mAdapter.getRow());
+                break;
+        }
+    }
+
+
+    private void createOrResetChessBoard(int row){
+
+        if(mGridLayoutManager == null){
+            mGridLayoutManager = new GridLayoutManager(this,row,GridLayoutManager.VERTICAL,false);
+            mChessBoardView.setLayoutManager(mGridLayoutManager);
+
+            mAdapter = new ChessBoardAdapter(this);
+            mAdapter.setRow(row);
+            mAdapter.setOnItemClickListener(this);
+
+            mChessBoardView.setAdapter(mAdapter);
+        }
+
+        //只需重置数据即可
+        if(mAdapter.getRow() == row){
+            mAdapter.setRow(row);
+            mAdapter.notifyDataSetChanged();
+           return;
+        }
+
+        //刷新整个棋盘
+        mAdapter.setRow(row);
+        mGridLayoutManager.setSpanCount(row);
+        mChessBoardView.setAdapter(mAdapter);
+    }
+
+
 }

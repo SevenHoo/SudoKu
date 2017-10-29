@@ -2,6 +2,8 @@ package com.github.seven.sudoku.core;
 
 import android.util.Log;
 
+import com.github.seven.sudoku.utils.MyLogger;
+
 import java.util.Stack;
 
 /**
@@ -63,6 +65,27 @@ public class Sudoku {
         return mChessBoard;
     }
 
+
+    public void fillChessBoard(int[] data){
+
+        if(data == null || data.length <= 0){
+            Log.e(TAG,"fillChessBoardRow fail, error: data is invalid.");
+            return;
+        }
+
+        if(data.length != mRow * mRow){
+            Log.e(TAG,"fillChessBoardRow fail, error: data length is not match mRow.");
+            return;
+        }
+
+        for (int i = 0; i < data.length; i ++){
+            if(data[i] <= 0){
+                continue;
+            }
+            mChessBoard[i] = -data[i];
+        }
+    }
+
     /**
      * 填写某行的数字
      * @param row 填写某行
@@ -120,7 +143,7 @@ public class Sudoku {
             for (int j = 1; j <= mRow; j ++){
 
                 value = calculateChessGirdValue(chessBoard,i,j);
-                //Log.d(TAG,"calculateChessGird value = " + value);
+                Log.d(TAG,"calculateChessGird row = " + i + " column = " + j + " value = " + value);
                 fillChessGrid(chessBoard,i,j,value);
 
                 if(0 == value){
@@ -157,8 +180,7 @@ public class Sudoku {
                 continue;
             }
             value = calculateValue(chessBoard,row,i,ROW);
-            //Log.d(TAG,"fillChessGrid row = " + row + " column = " + column);
-            //Log.d(TAG,"calculateValue row = " + row + " column = " + i  +  " value = " + value);
+            //Log.d(TAG,"fillChessGrid row = " + row + " column = " + i  +  " value = " + value);
             fillChessGrid(chessBoard,row,i,value);
         }
 
@@ -172,6 +194,7 @@ public class Sudoku {
             if (row == i){
                 continue;
             }
+            Log.d(TAG,"fillChessGrid row = " + i + " column = " + column  +  " value = " + value);
             value = calculateValue(chessBoard,i,column,COLUMN);
             fillChessGrid(chessBoard,i,column,value);
         }
@@ -209,13 +232,13 @@ public class Sudoku {
         int index = getArrayIndex(row,column);
         int value = chessBoard[index];
 
-
         for(int i = 1; i <= mRow; i ++){
             //本身跳过
             if(i == (relation == ROW ? column : row)){
                 continue;
             }
             index = (relation == ROW ? getArrayIndex(row,i) : getArrayIndex(i,column));
+            MyLogger.log().d("calculateChessGirdValue!!! value = " + value + " exclude " + chessBoard[index] + " index = " + index);
             value = calculateChessGirdValue(value,chessBoard[index]);
             //说明棋盘数据已经出错
             if(0 == value){
@@ -320,6 +343,7 @@ public class Sudoku {
         return calculate(mChessBoard);
     }
 
+    private boolean flag = false;
     private boolean calculate(int[] chessBoard){
 
         int currentGridIndex = findMinPossibilityIndex();
@@ -340,6 +364,7 @@ public class Sudoku {
 
         //填写错误，重新尝试下个可能数字
         if(result < 0){
+            Log.d(TAG,"no." + currentGridIndex + " grid is not allowed to fill the  " + number);
             SudoKuRecord record = mSudoKuOperatorStack.pop();
             chessBoard = record.getChessBoard();
             currentGridIndex = record.getCurrentIndex();

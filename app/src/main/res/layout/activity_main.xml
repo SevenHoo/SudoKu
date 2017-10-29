@@ -5,13 +5,122 @@
     android:layout_height="match_parent"
     tools:context="com.github.seven.sudoku.ui.MainActivity">
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/easy_mode_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="4 * 4"
+            android:textSize="20sp"
+            android:onClick="switchMode"/>
+
+        <Button
+            android:id="@+id/hard_mode_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="5 * 5"
+            android:textSize="20sp"
+            android:onClick="switchMode"/>
+
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/chess_board_recycler_view"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent">
     </android.support.v7.widget.RecyclerView>
+
+
+    <LinearLayout
+        android:id="@+id/control_layout"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/start_calculate_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Start"
+            android:textSize="20sp"
+            android:onClick="control"/>
+
+        <Button
+            android:id="@+id/clear_data_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Clear"
+            android:textSize="20sp"
+            android:onClick="control"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_above="@id/control_layout"
+        android:layout_marginBottom="10dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <ImageButton
+            android:id="@+id/angle_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@mipmap/ic_angle"
+            android:background="@android:color/transparent"
+            android:onClick="fill"/>
+
+        <ImageButton
+            android:id="@+id/rect_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@mipmap/ic_rect"
+            android:background="@android:color/transparent"
+            android:onClick="fill"/>
+
+        <ImageButton
+            android:id="@+id/circle_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@mipmap/ic_circle"
+            android:background="@android:color/transparent"
+            android:onClick="fill"/>
+
+        <ImageButton
+            android:id="@+id/ten_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@mipmap/ic_x"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            android:onClick="fill"/>
+
+        <ImageButton
+            android:id="@+id/star_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@mipmap/ic_star"
+            android:background="@android:color/transparent"
+            android:onClick="fill"/>
+
+    </LinearLayout>
 
 </RelativeLayout>
